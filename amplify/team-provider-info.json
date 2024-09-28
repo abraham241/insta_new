@@ -26,5 +26,30 @@
         "instagrame15ce3c3e15ce3c3": {}
       }
     }
+  },
+  "devg": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-instagram-devg-d8f3b-authRole",
+      "UnauthRoleArn": "arn:aws:iam::767397794614:role/amplify-instagram-devg-d8f3b-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::767397794614:role/amplify-instagram-devg-d8f3b-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-instagram-devg-d8f3b-deployment",
+      "UnauthRoleName": "amplify-instagram-devg-d8f3b-unauthRole",
+      "StackName": "amplify-instagram-devg-d8f3b",
+      "StackId": "arn:aws:cloudformation:us-east-1:767397794614:stack/amplify-instagram-devg-d8f3b/07db7f70-7d3c-11ef-86a9-0e170a7f91ff",
+      "AmplifyAppId": "d23oiyujdbe9iz"
+    },
+    "categories": {
+      "auth": {
+        "instagrame15ce3c3e15ce3c3": {},
+        "instagramfdd6d611": {}
+      },
+      "function": {
+        "instagramfdd6d611CustomMessage": {
+          "deploymentBucketName": "amplify-instagram-devg-d8f3b-deployment",
+          "s3Key": "amplify-builds/instagramfdd6d611CustomMessage-744b3554572f35434638-build.zip"
+        }
+      }
+    }
   }
 }
