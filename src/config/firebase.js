@@ -1,16 +1,17 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
-import { setPersistence, browserSessionPersistence } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
+import { setPersistence, browserSessionPersistence } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBRtEEsxQYH9gpYmuBpBNKTqxe9qAOClWk",
-  authDomain: "insta-app-b9842.firebaseapp.com",
-  projectId: "insta-app-b9842",
-  storageBucket: "insta-app-b9842.appspot.com",
-  messagingSenderId: "447812028569",
-  appId: "1:447812028569:web:338efbcf489421bbc1d008"
+  apiKey: "AIzaSyBl87ID17ntEE6bqsgmzbs4kg6Bt4c4Wfs",
+  authDomain: "intagram-main.firebaseapp.com",
+  databaseURL: "https://intagram-main-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "intagram-main",
+  storageBucket: "intagram-main.appspot.com",
+  messagingSenderId: "186208905347",
+  appId: "1:186208905347:web:299d1f76bd41d7391dd3b6"
 };
 
 // Initialize Firebase
