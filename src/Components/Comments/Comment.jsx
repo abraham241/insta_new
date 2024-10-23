@@ -1,48 +1,57 @@
-import React from 'react';
-import { doc, deleteDoc } from 'firebase/firestore';
-import { db } from '../../config/firebase';
-import {AiOutlineDelete} from 'react-icons/ai';
-import { useSelector } from 'react-redux';
-import { parseDate } from '../../utils/utils';
-import AvatarDisplay from '../Profile/UserAvatar';
-import toast, { Toaster } from 'react-hot-toast';
+import React from "react";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "../../config/firebase";
+import { AiOutlineDelete } from "react-icons/ai";
+import { useSelector } from "react-redux";
+import { parseDate } from "../../utils/utils"; // Remplace formatDate par parseDate
+import AvatarDisplay from "../Profile/UserAvatar";
+import toast, { Toaster } from "react-hot-toast";
 
-const Comment = ({ comment,postId }) => {
-    const {auth} = useSelector(state => state);
-    const handleDelete = async () => {
-        try {
-            await deleteDoc(doc(db, "posts", postId, "comments", comment.id));
-            toast.success("Comment deleted successfully.");
-        } catch (error) {
-            toast.error("Failed to delete comment.");
-        }
-    };
+const CommentItem = ({ comment, postId }) => {
+  const { auth } = useSelector((state) => state);
 
-    return (
-        <>
-        <Toaster/>
-        <div className='grid grid-cols-[50px_1fr_30px] gap-2 mb-2'>
-            <div>
-                <AvatarDisplay userId={comment.userId}/>
-            </div>
-            <div className='bg-gray-100 p-2 rounded'>
-            <div className='mb-2'>
-                <p className='font-bold'>{comment.user.name}</p>
-            <p className='text-[12px]'>{parseDate(comment.timestamp.seconds * 1000)}</p>
-            </div>
-            <p>{comment.text}</p>
-            
-            </div>
-            <div className='flex justify-end items-end'>
-            {auth && auth.userId === comment.userId && (
-                <button onClick={handleDelete} className="px-2 rounded bg-red-600 text-white">
-                    <AiOutlineDelete size={15} className="inline-block "/> 
-                </button>
-            )}
-            </div>
+  // Handle comment deletion
+  const handleDeleteComment = async () => {
+    try {
+      await deleteDoc(doc(db, "posts", postId, "comments", comment.id));
+      toast.success("Commentaire supprimé avec succès.");
+    } catch (error) {
+      toast.error("Erreur lors de la suppression du commentaire.");
+    }
+  };
+
+  return (
+    <>
+      <Toaster />
+      <div className="flex items-start gap-3 py-3 border-b">
+        {/* Avatar */}
+        <AvatarDisplay userId={comment.userId} />
+
+        {/* Comment Content */}
+        <div className="flex-1 bg-gray-100 p-3 rounded-lg">
+          <div className="mb-1">
+            <p className="font-semibold text-sm">{comment.user.name}</p>
+            <p className="text-xs text-gray-500">
+              {parseDate(comment.timestamp.seconds * 1000)}
+            </p>{" "}
+            {/* Utilisation de parseDate */}
+          </div>
+          <p className="text-sm text-gray-800">{comment.text}</p>
         </div>
-        </>
-    );
+
+        {/* Delete Button */}
+        {auth && auth.userId === comment.userId && (
+          <button
+            onClick={handleDeleteComment}
+            className="text-red-500 hover:text-red-700 transition-colors duration-200"
+            aria-label="Supprimer le commentaire"
+          >
+            <AiOutlineDelete size={20} />
+          </button>
+        )}
+      </div>
+    </>
+  );
 };
 
-export default Comment;
+export default CommentItem;
