@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 const MainLoader = ({
   size = 50,
   display = true,
-  bgColor = "blue",
+  bgColor = "red",
   type = "spinner-default",
 }) => {
   return display ? (
