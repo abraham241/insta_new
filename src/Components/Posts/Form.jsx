@@ -9,101 +9,106 @@ import MainLoader from "../Loader/MainLoader";
 import toast, { Toaster } from "react-hot-toast";
 import UserAvatar from "../Profile/UserAvatar";
 
-const Form = () => {
-    const [image,setImage] = useState(null);
-    const [loader,setLoader] = useState(false);
-    const {auth} = useSelector(state => state);
-    const captionRef = useRef();
+const CreatePostForm = () => {
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const { auth } = useSelector((state) => state);
+    const postTextRef = useRef();
 
-    const onSelectImage = (event) =>{
-        console.log(event.target.files[0]);
-        setImage(event.target.files[0]);
-    }
-    const onDeleteImage = () =>{
-        setImage(null);
-    }
-    const onCreatePost = async () =>{
-        setLoader(true);
-        if(image === null){
-            toast.error('Ajouter une image');
-            setLoader(false)
+    const handleImageSelection = (e) => {
+        console.log(e.target.files[0]);
+        setSelectedImage(e.target.files[0]);
+    };
+
+    const handleImageRemoval = () => {
+        setSelectedImage(null);
+    };
+
+    const handlePostSubmission = async () => {
+        setIsLoading(true);
+        if (!selectedImage) {
+            toast.error('Veuillez ajouter une image');
+            setIsLoading(false);
             return;
         }
         try {
-            const fileRef = ref(storage, `${auth.userId}/posts/${Date.now()}_${image.name}`);
-            const snapshot = await uploadBytes(fileRef, image);
-            const photoURL = await getDownloadURL(snapshot.ref);
+            const imageRef = ref(storage, `${auth.userId}/posts/${Date.now()}_${selectedImage.name}`);
+            const imageSnapshot = await uploadBytes(imageRef, selectedImage);
+            const uploadedImageURL = await getDownloadURL(imageSnapshot.ref);
       
             await addDoc(collection(db, 'posts'), {
-              photoURL,
-              caption : captionRef.current.value,
-              userId: auth.userId, 
-              user : {
-                email : auth.email,
-                name : auth.name,
-                lastname : auth.family_name
-              }, 
-              userProfilePic: auth?.photoURL ?? "none", 
-              timestamp: serverTimestamp(),
-              likes: 0,
-              comments: 0,
-              likedBy: []
-            }).then(res =>{
-                console.log("Post added");
-                console.log(res);
-                console.log("Post added");
+                photoURL: uploadedImageURL,
+                caption: postTextRef.current.value,
+                userId: auth.userId,
+                user: {
+                    email: auth.email,
+                    firstName: auth.name,
+                    lastName: auth.family_name,
+                },
+                userProfilePic: auth?.photoURL ?? "none",
+                timestamp: serverTimestamp(),
+                likes: 0,
+                comments: 0,
+                likedBy: []
+            }).then(() => {
+                console.log("Post successfully added");
                 window.location.reload();
-            }).catch(err =>{
-                console.log(err);
-                setLoader(false);
+            }).catch((error) => {
+                console.error('Failed to add post: ', error);
+                setIsLoading(false);
             });
-          } catch (error) {
-            console.error('Error creating post: ', error);
-          }
-    }
+        } catch (error) {
+            console.error('Error while creating post: ', error);
+            setIsLoading(false);
+        }
+    };
+
     return (
         <>
         <Toaster/>
-        <div className="bg-white py-3 rounded w-full max-w-[800px] grid grid-rows-[60px_400px] grid-cols-2">
-            <div className="col-span-2 flex justify-between items-center px-3 border-b">
-                <p>
-                
-                </p>
-                <p className="font-bold">Créer une publication</p>
-                {loader ? <MainLoader/> : <button onClick={onCreatePost} className="text-blue-600 font-bold">Partager</button>}
-            </div>
-            <div className="p-3">
-            <div className="w-full h-full flex justify-center items-center relative">
-                
-                {image ? <img className="w-full h-full object-contain" src={URL.createObjectURL(image)} alt="selected"/> : <p className="text-[40px] text-gray-300"><GrGallery/></p>}
-
-                <div className="absolute right-0 bottom-0 flex gap-4">
-                    <button onClick={onDeleteImage} className="flex gap-2 items-center justify-center w-[35px] h-[35px] rounded-[99px] bg-red-700 bg-opacity-70 text-white">
-                        <IoClose/>
+        <div className="bg-gray-50 rounded-lg w-full max-w-[850px] shadow-lg">
+            <div className="flex justify-between items-center px-5 py-3 border-b border-gray-300">
+                <div></div>
+                <p className="font-semibold text-lg">Créer un nouveau post</p>
+                {isLoading ? (
+                    <MainLoader />
+                ) : (
+                    <button onClick={handlePostSubmission} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-all">
+                        Publier
                     </button>
-                    <button className="flex gap-2 items-center justify-center w-[35px] h-[35px] rounded-[99px] bg-blue-800 bg-opacity-70 text-white">
-                        <GrGallery size={12}/>
-                        <input onChange={onSelectImage} className="absolute w-full h-full opacity-0 cursor-pointer" type="file" accept="image/*"/>
-                    </button>
-                </div>
-
+                )}
             </div>
-            </div>
-            <div className="grid grid-rows-[50px_1fr] p-3 gap-3">
-                <div className="">
-                    <div className="flex gap-2 items-center">
-                        <UserAvatar userId={auth.userId}/>
-                        <div>
-                            <p className="font-bold">{auth?.name}</p>
-                            <p className="text-gray-600 text-[14px]">{auth?.email}</p>
-                        </div>
+            <div className="flex flex-col md:flex-row">
+                <div className="md:w-1/2 flex justify-center items-center p-5 relative border-r border-gray-200">
+                    {selectedImage ? (
+                        <img className="max-w-full max-h-[300px] object-cover rounded-md" src={URL.createObjectURL(selectedImage)} alt="chosen" />
+                    ) : (
+                        <p className="text-gray-400 text-5xl"><GrGallery/></p>
+                    )}
+                    <div className="absolute right-5 bottom-5 flex space-x-3">
+                        <button onClick={handleImageRemoval} className="bg-red-600 text-white p-2 rounded-full hover:bg-red-500 transition-all">
+                            <IoClose/>
+                        </button>
+                        <label className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-500 transition-all cursor-pointer">
+                            <GrGallery size={12} />
+                            <input onChange={handleImageSelection} className="hidden" type="file" accept="image/*" />
+                        </label>
                     </div>
                 </div>
-                <textarea ref={captionRef} className="border resize-none outline-none p-3 rounded bg-gray-50" placeholder="Votre message..."></textarea>
+                <div className="md:w-1/2 flex flex-col justify-between p-5">
+                    <div className="flex items-center space-x-4 mb-4">
+                        <UserAvatar userId={auth.userId} />
+                        <div>
+                            <p className="text-lg font-semibold">{auth?.name}</p>
+                            <p className="text-sm text-gray-500">{auth?.email}</p>
+                        </div>
+                    </div>
+                    <textarea ref={postTextRef} className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400 bg-gray-100 text-gray-700 placeholder-gray-400" rows="5" placeholder="Quoi de neuf ?"></textarea>
+                </div>
             </div>
         </div>
         </>
     );
-}
+};
 
-export default Form;
+export default CreatePostForm;
