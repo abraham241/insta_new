@@ -13,128 +13,126 @@ import MainLoader from '../Loader/MainLoader';
 import { parseDate } from '../../utils/utils';
 import PostDetails from './PostDetails';
 
-const Post = ({ post }) => {
-    const {auth} = useSelector(state => state);
-    const [commentLoader,setCommentLoader] = useState(false);
-    const [liked,setLiked] = useState(post.likedBy.includes(auth?.userId));
-    const commentsRef = useRef();
-    const [showComments, setShowComments] = useState(false); 
+const PostCard = ({ post }) => {
+    const { auth } = useSelector(state => state);
+    const [loadingComment, setLoadingComment] = useState(false);
+    const [isLiked, setIsLiked] = useState(post.likedBy.includes(auth?.userId));
+    const commentInputRef = useRef();
+    const [commentSectionVisible, setCommentSectionVisible] = useState(false);
 
-    const toggleLike = async () => {
-
+    const handleLikeToggle = async () => {
         const postRef = doc(db, "posts", post.id);
         try {
             if (post.likedBy.includes(auth?.userId)) {
-                await updateDoc(postRef, { likedBy: arrayRemove(auth.userId) }).then(() =>{
-                    setLiked(!liked);
-                }).catch(err =>{
-                    toast.error("Commentaire non ajouter.");
-                })
+                await updateDoc(postRef, { likedBy: arrayRemove(auth.userId) })
+                    .then(() => setIsLiked(!isLiked))
+                    .catch(err => toast.error("Erreur lors du retrait du like."));
             } else {
-                await updateDoc(postRef, { likedBy: arrayUnion(auth.userId) }).then(() =>{
-                    setLiked(!liked);
-                }).catch(err =>{
-                    toast.error("Commentaire non ajouter.");
-                })
+                await updateDoc(postRef, { likedBy: arrayUnion(auth.userId) })
+                    .then(() => setIsLiked(!isLiked))
+                    .catch(err => toast.error("Erreur lors de l'ajout du like."));
             }
         } catch (error) {
-            toast.error("Probleme de connexion.");
+            toast.error("Problème de connexion.");
         }
     };
 
-    const deletePost = async () => {
-
-        const postRef = doc(db, "posts", post.id);
+    const removePost = async () => {
+        const postDocumentRef = doc(db, "posts", post.id);
         try {
-            await deleteDoc(postRef);
-            toast.success("Post supprimer avec succes");
-        } catch (error) {
-            toast.error("Post non supprimer");
+            await deleteDoc(postDocumentRef)
+                .then(() => {
+                    toast.success("Publication supprimée avec succès.");
+                })
+                .catch((err) => {
+                    toast.error("Erreur lors de la suppression de la publication.");
+                    console.error("Erreur :", err);
+                });
+        } catch (err) {
+            toast.error("Impossible de supprimer la publication.");
+            console.error("Erreur :", err);
         }
     };
+    
 
-    const handleCommentSubmit = async (e) => {
-        if (commentsRef.current.value.trim() === '') {
-            toast.error("Le champ commentaire est vide");
+    const handleCommentSubmit = async () => {
+        if (commentInputRef.current.value.trim() === '') {
+            toast.error("Veuillez écrire un commentaire.");
             return;
         }
-        if(commentLoader){
-            return;
-        }
-        setCommentLoader(true);
+        if (loadingComment) return;
+
+        setLoadingComment(true);
         try {
             const postRef = doc(db, "posts", post.id);
-            const commentData = {
-                text: commentsRef.current.value,
+            const newComment = {
+                text: commentInputRef.current.value,
                 userId: auth.userId,
                 timestamp: new Date(),
-                user : {
-                    name : auth.name,
-                    email : auth.email
+                user: {
+                    name: auth.name,
+                    email: auth.email
                 }
             };
-            await addDoc(collection(postRef, "comments"), commentData).then(res =>{
-                console.log(res);
-                commentsRef.current.value = "";
-                toast.success("Commentaire ajouter.");
-                setCommentLoader(false);
-            })
+            await addDoc(collection(postRef, "comments"), newComment)
+                .then(() => {
+                    commentInputRef.current.value = "";
+                    toast.success("Commentaire ajouté.");
+                    setLoadingComment(false);
+                });
         } catch (error) {
-            toast.error("Le commentaire n'as pu etre ajouter");
-            setCommentLoader(false);
+            toast.error("Impossible d'ajouter le commentaire.");
+            setLoadingComment(false);
         }
     };
 
     return (
         <>
         <Toaster/>
-        <div className="mb-4 w-full max-w-[500px] mx-auto">
-            <div className='flex gap-2 items-center'>
+        <div className="bg-white rounded-lg shadow-md max-w-lg mx-auto mb-6 p-4">
+            <div className="flex items-center mb-4">
                 <AvatarDisplay userId={post.userId} />
-                <div>
-                    <p>{post?.user?.name}</p>
-                    <p className='text-[13px] text-gray-600'>{post?.user?.email}</p>
+                <div className="ml-3">
+                    <p className="font-semibold text-gray-800">{post?.user?.name}</p>
+                    <p className="text-sm text-gray-500">{post?.user?.email}</p>
                 </div>
-                
             </div>
-            <img src={post.photoURL} alt="Post" className="w-full h-auto my-3 rounded"/>
-            <div className='flex gap-3 justify-between items-center'>
-            <div className='flex gap-5'>
-            <button onClick={toggleLike} disabled={!auth} className='relative'>
-                {liked ? <FaHeart size={30} color='red'/> : <CiHeart size={30} color='#000'/>}
-            </button>
-            <button onClick={() => setShowComments(true)} className="cursor-pointer">
-                <AiOutlineComment color='#000' size={30}/>
-            </button>
-            </div>
-            <p className="text-gray-500 text-sm mt-1">{parseDate(post.timestamp)}</p>
-            </div>
-            <div className="py-2 ">
-                <p>{post.caption}</p>
-                <div className="flex items-center justify-between mt-2">
-                    
-                    {auth && auth.uid === post.userId && (
-                        <button onClick={deletePost} className="p-2 text-red-600 animate-bounce ease-in-out duration-300 relative">
-                            <span className="text-1xl text-red-600" title="Delete Post"> 
-                                <FaTrashAlt className="text-red-600" />
-                             </span>
+            <div className="relative">
+                <img src={post.photoURL} alt="Post" className="w-full rounded-lg object-cover mb-4" />
+                <div className="absolute top-3 right-3">
+                    {auth?.uid === post.userId && (
+                        <button onClick={removePost} className="text-red-600 hover:text-red-700 transition-all duration-200">
+                            <FaTrashAlt size={20} />
                         </button>
                     )}
                 </div>
-                <div className="mt-2 grid grid-cols-[1fr_50px] border rounded overflow-hidden items-center px-3">
-                    <textarea className='resize-none py-2 outline-none' ref={commentsRef} placeholder='Ajouter un commentaire...'></textarea>
-                    <button onClick={handleCommentSubmit} className='hover:bg-green-600 hover:text-white h-[50px] rounded-[99px] transition-all duration-500 flex justify-center items-center'>
-                        {commentLoader ? <MainLoader/> : <FiSend size={20}/>}
+            </div>
+            <div className="flex justify-between items-center mb-3">
+                <div className="flex space-x-5">
+                    <button onClick={handleLikeToggle} disabled={!auth} className="focus:outline-none">
+                        {isLiked ? <FaHeart size={25} color='red' /> : <CiHeart size={25} color='#000' />}
+                    </button>
+                    <button onClick={() => setCommentSectionVisible(!commentSectionVisible)} className="focus:outline-none">
+                        <AiOutlineComment size={25} />
                     </button>
                 </div>
-                <div className=" flex justify-end">
-                    
-                    {showComments && <PostDetails post={post} setShowComments={setShowComments} />}
+                <p className="text-sm text-gray-500">{parseDate(post.timestamp)}</p>
+            </div>
+            <p className="text-gray-800 mb-4">{post.caption}</p>
+            <div className="border-t pt-3">
+                <div className="flex space-x-3 items-center">
+                    <textarea ref={commentInputRef} className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition" placeholder="Ajouter un commentaire..."></textarea>
+                    <button onClick={handleCommentSubmit} className="bg-green-500 text-white rounded-full p-2 hover:bg-green-600 transition-all duration-300 focus:outline-none">
+                        {loadingComment ? <MainLoader /> : <FiSend size={18} />}
+                    </button>
                 </div>
             </div>
+            {commentSectionVisible && (
+                <PostDetails post={post} setShowComments={setCommentSectionVisible} />
+            )}
         </div>
         </>
     );
 };
 
-export default Post;
+export default PostCard;
