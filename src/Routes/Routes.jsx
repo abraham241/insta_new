@@ -4,23 +4,21 @@ import Profile from "../Pages/Profile";
 
 const routes = createBrowserRouter([
     {
-        path : "/",
-        element : <Home/>
+        path: "/",
+        element: <Home />,
     },
     {
-        path : "/profil",
-        element : <Profile/>
+        path: "/profil",
+        element: <Profile />,
     },
     {
-        path : "*",
-        element : <Navigate to="/"/>
-    }
-])
+        path: "*",
+        element: <Navigate to="/" replace />, // Redirection vers la page d'accueil pour les routes non trouvées
+    },
+]);
 
-const RoutesApp = () => {
-    return (
-        <RouterProvider router={routes}/>
-    );
-}
+const RoutesApp = () => (
+    <RouterProvider router={routes} />
+);
 
 export default RoutesApp;
