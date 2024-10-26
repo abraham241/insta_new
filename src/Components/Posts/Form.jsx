@@ -26,40 +26,46 @@ const CreatePostForm = () => {
 
     const handlePostSubmission = async () => {
         setIsLoading(true);
-        if (!selectedImage) {
-            toast.error('Veuillez ajouter une image');
-            setIsLoading(false);
-            return;
-        }
-        try {
-            const imageRef = ref(storage, `${auth.userId}/posts/${Date.now()}_${selectedImage.name}`);
-            const imageSnapshot = await uploadBytes(imageRef, selectedImage);
-            const uploadedImageURL = await getDownloadURL(imageSnapshot.ref);
-      
-            await addDoc(collection(db, 'posts'), {
-                photoURL: uploadedImageURL,
-                caption: postTextRef.current.value,
-                userId: auth.userId,
-                user: {
-                    email: auth.email,
-                    firstName: auth.name,
-                    lastName: auth.family_name,
-                },
-                userProfilePic: auth?.photoURL ?? "none",
-                timestamp: serverTimestamp(),
-                likes: 0,
-                comments: 0,
-                likedBy: []
-            }).then(() => {
-                console.log("Post successfully added");
-                window.location.reload();
-            }).catch((error) => {
-                console.error('Failed to add post: ', error);
+
+        switch (true) {
+            case !selectedImage:
+                toast.error('Veuillez ajouter une image');
                 setIsLoading(false);
-            });
-        } catch (error) {
-            console.error('Error while creating post: ', error);
-            setIsLoading(false);
+                return;
+
+            default:
+                try {
+                    const imageRef = ref(storage, `${auth.userId}/posts/${Date.now()}_${selectedImage.name}`);
+                    const imageSnapshot = await uploadBytes(imageRef, selectedImage);
+                    const uploadedImageURL = await getDownloadURL(imageSnapshot.ref);
+
+                    await addDoc(collection(db, 'posts'), {
+                        photoURL: uploadedImageURL,
+                        caption: postTextRef.current.value,
+                        userId: auth.userId,
+                        user: {
+                            email: auth.email,
+                            firstName: auth.name,
+                            lastName: auth.family_name,
+                        },
+                        userProfilePic: auth?.photoURL ?? "none",
+                        timestamp: serverTimestamp(),
+                        likes: 0,
+                        comments: 0,
+                        likedBy: []
+                    })
+                        .then(() => {
+                            console.log("Post successfully added");
+                            window.location.reload();
+                        })
+                        .catch((error) => {
+                            console.error('Failed to add post: ', error);
+                            setIsLoading(false);
+                        });
+                } catch (error) {
+                    console.error('Error while creating post: ', error);
+                    setIsLoading(false);
+                }
         }
     };
 
