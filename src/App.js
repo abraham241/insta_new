@@ -7,7 +7,6 @@ import { login } from './setup/redux/authSlices';
 import { fetchUserAttributes} from 'aws-amplify/auth';
 import RoutesApp from './Routes/Routes';
 Amplify.configure(awsExport);
-
 const App = ({ signOut, user }) => {
   const dispatcher = useDispatch();
   fetchUserAttributes().then(userAttributes =>{

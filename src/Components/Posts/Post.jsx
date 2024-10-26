@@ -22,18 +22,29 @@ const PostCard = ({ post }) => {
 
     const handleLikeToggle = async () => {
         const postRef = doc(db, "posts", post.id);
-        try {
-            if (post.likedBy.includes(auth?.userId)) {
-                await updateDoc(postRef, { likedBy: arrayRemove(auth.userId) })
-                    .then(() => setIsLiked(!isLiked))
-                    .catch(err => toast.error("Erreur lors du retrait du like."));
-            } else {
-                await updateDoc(postRef, { likedBy: arrayUnion(auth.userId) })
-                    .then(() => setIsLiked(!isLiked))
-                    .catch(err => toast.error("Erreur lors de l'ajout du like."));
-            }
-        } catch (error) {
-            toast.error("Problème de connexion.");
+        switch (post.likedBy.includes(auth?.userId)) {
+            case true:
+                try {
+                    await updateDoc(postRef, { likedBy: arrayRemove(auth.userId) })
+                        .then(() => setIsLiked(!isLiked))
+                        .catch(() => toast.error("Erreur lors du retrait du like."));
+                } catch (error) {
+                    toast.error("Problème de connexion.");
+                }
+                break;
+
+            case false:
+                try {
+                    await updateDoc(postRef, { likedBy: arrayUnion(auth.userId) })
+                        .then(() => setIsLiked(!isLiked))
+                        .catch(() => toast.error("Erreur lors de l'ajout du like."));
+                } catch (error) {
+                    toast.error("Problème de connexion.");
+                }
+                break;
+
+            default:
+                toast.error("Action inconnue lors du like.");
         }
     };
 
@@ -54,35 +65,40 @@ const PostCard = ({ post }) => {
         }
     };
     
-
     const handleCommentSubmit = async () => {
-        if (commentInputRef.current.value.trim() === '') {
-            toast.error("Veuillez écrire un commentaire.");
-            return;
-        }
-        if (loadingComment) return;
+        const commentValue = commentInputRef.current.value.trim();
 
-        setLoadingComment(true);
-        try {
-            const postRef = doc(db, "posts", post.id);
-            const newComment = {
-                text: commentInputRef.current.value,
-                userId: auth.userId,
-                timestamp: new Date(),
-                user: {
-                    name: auth.name,
-                    email: auth.email
-                }
-            };
-            await addDoc(collection(postRef, "comments"), newComment)
-                .then(() => {
-                    commentInputRef.current.value = "";
-                    toast.success("Commentaire ajouté.");
+        switch (true) {
+            case commentValue === '':
+                toast.error("Veuillez écrire un commentaire.");
+                return;
+
+            case loadingComment:
+                return;
+
+            default:
+                setLoadingComment(true);
+                try {
+                    const postRef = doc(db, "posts", post.id);
+                    const newComment = {
+                        text: commentValue,
+                        userId: auth.userId,
+                        timestamp: new Date(),
+                        user: {
+                            name: auth.name,
+                            email: auth.email
+                        }
+                    };
+                    await addDoc(collection(postRef, "comments"), newComment)
+                        .then(() => {
+                            commentInputRef.current.value = "";
+                            toast.success("Commentaire ajouté.");
+                            setLoadingComment(false);
+                        });
+                } catch (error) {
+                    toast.error("Impossible d'ajouter le commentaire.");
                     setLoadingComment(false);
-                });
-        } catch (error) {
-            toast.error("Impossible d'ajouter le commentaire.");
-            setLoadingComment(false);
+                }
         }
     };
 
