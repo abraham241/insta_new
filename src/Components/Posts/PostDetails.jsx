@@ -15,35 +15,39 @@ const PostModal = ({ postData, toggleComments }) => {
 
     const submitComment = async () => {
         const commentText = commentInputRef.current.value.trim();
-        if (commentText === '') {
-            toast.error("Veuillez remplir le champ commentaire.");
-            return;
-        }
 
-        if (isSubmittingComment) return;
+        switch (true) {
+            case commentText === '':
+                toast.error("Veuillez remplir le champ commentaire.");
+                return;
 
-        setIsSubmittingComment(true);
-        try {
-            const postDocumentRef = doc(db, "posts", postData.id);
-            const newComment = {
-                content: commentText,
-                authorId: auth.userId,
-                createdAt: new Date(),
-                user: {
-                    name: auth.name,
-                    email: auth.email
-                }
-            };
+            case isSubmittingComment:
+                return;
 
-            await addDoc(collection(postDocumentRef, "comments"), newComment)
-                .then(() => {
-                    commentInputRef.current.value = "";
-                    toast.success("Commentaire ajouté avec succès.");
+            default:
+                setIsSubmittingComment(true);
+                try {
+                    const postDocumentRef = doc(db, "posts", postData.id);
+                    const newComment = {
+                        content: commentText,
+                        authorId: auth.userId,
+                        createdAt: new Date(),
+                        user: {
+                            name: auth.name,
+                            email: auth.email
+                        }
+                    };
+
+                    await addDoc(collection(postDocumentRef, "comments"), newComment)
+                        .then(() => {
+                            commentInputRef.current.value = "";
+                            toast.success("Commentaire ajouté avec succès.");
+                            setIsSubmittingComment(false);
+                        });
+                } catch (error) {
+                    toast.error("Erreur lors de l'ajout du commentaire.");
                     setIsSubmittingComment(false);
-                });
-        } catch (error) {
-            toast.error("Erreur lors de l'ajout du commentaire.");
-            setIsSubmittingComment(false);
+                }
         }
     };
 
